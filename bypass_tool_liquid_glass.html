@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070d">
+<title>Bypass Tool</title>
+<style>
+:root{
+  --bg:#05070d; --ink:#f2f5fb; --muted:#8f9ab3; --line:rgba(255,255,255,.10);
+  --blue:#6ea8ff; --ok:#6ee7b7; --warn:#fbbf24; --err:#ff8a9b;
+  --r:clamp(22px,6vw,30px);
+}
+*{box-sizing:border-box;margin:0}
+body{
+  min-height:100vh;min-height:100dvh;color:var(--ink);overflow-x:hidden;
+  font:400 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:
+    radial-gradient(90% 45% at 15% 0%,rgba(70,90,230,.30),transparent 70%),
+    radial-gradient(80% 40% at 100% 100%,rgba(40,170,210,.16),transparent 70%),
+    var(--bg) fixed;
+  padding:max(20px,env(safe-area-inset-top)) clamp(14px,4vw,24px) max(28px,env(safe-area-inset-bottom));
+}
+main{width:min(100%,520px);margin:0 auto}
+header{display:flex;align-items:center;gap:14px;margin:6px 4px 20px}
+.logo{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+h1{font-size:clamp(1.3rem,5.6vw,1.6rem);font-weight:650;letter-spacing:-.015em;line-height:1.15}
+header p{color:var(--muted);font-size:.86rem}
+.panel{
+  border-radius:var(--r);padding:clamp(18px,5vw,26px);
+  background:linear-gradient(160deg,rgba(255,255,255,.085),rgba(255,255,255,.035));
+  border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%);
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.18);
+}
+.sec+.sec{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
+h2{font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:12px}
+.platforms{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:340px){.platforms{grid-template-columns:repeat(2,1fr)}}
+.chip{
+  height:46px;padding:0 6px;border-radius:14px;cursor:pointer;color:#cfd6e8;font:inherit;font-size:.84rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);transition:background .2s,border-color .2s,color .2s,transform .12s;
+}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{color:#fff;background:rgba(110,168,255,.20);border-color:rgba(130,180,255,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.field{position:relative}
+input{
+  width:100%;height:54px;padding:0 48px 0 16px;border-radius:16px;color:var(--ink);font:inherit;font-size:16px;
+  background:rgba(0,0,0,.32);border:1px solid var(--line);text-overflow:ellipsis;transition:border-color .2s,box-shadow .2s;
+}
+input::placeholder{color:#58627b}
+input:focus{outline:none;border-color:rgba(130,180,255,.8);box-shadow:0 0 0 4px rgba(110,168,255,.16)}
+input.bad{border-color:var(--err);box-shadow:0 0 0 4px rgba(255,138,155,.12)}
+.clear{position:absolute;right:8px;top:8px;width:38px;height:38px;border-radius:12px;border:0;cursor:pointer;
+  background:rgba(255,255,255,.09);color:var(--ink);font-size:15px;display:none}
+.field.has-text .clear{display:block}
+.hint{min-height:1.3em;margin-top:8px;font-size:.83rem;color:var(--err)}
+.go{
+  width:100%;height:56px;margin-top:6px;border:0;border-radius:18px;cursor:pointer;color:#fff;
+  font:650 1rem/1 system-ui,sans-serif;letter-spacing:.01em;
+  background:linear-gradient(135deg,#6a5cff,#2f8cff 55%,#2fc4e0);
+  box-shadow:0 12px 28px -8px rgba(47,140,255,.55),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .12s,filter .2s,opacity .2s;
+}
+.go:active{transform:scale(.98)}
+.go:disabled{opacity:.65;cursor:progress;filter:saturate(.75)}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.status{font-weight:600;font-size:.95rem}
+.status[data-s="running"]{color:var(--blue)} .status[data-s="done"]{color:var(--ok)}
+.status[data-s="missing"]{color:var(--warn)} .status[data-s="invalid"]{color:var(--err)}
+.pct{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.9rem}
+.bar{height:6px;border-radius:9px;background:rgba(255,255,255,.09);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#6a5cff,#2f8cff,#2fc4e0);transition:width .2s linear}
+.steps{list-style:none;padding:0;margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px 12px}
+.steps li{display:flex;align-items:center;gap:8px;font-size:.82rem;color:#6d778f}
+.steps li b{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.7rem;font-weight:600;
+  border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.steps li.on{color:var(--ink)} .steps li.on b{border-color:var(--blue);color:var(--blue)}
+.steps li.ok{color:#bfc8dc} .steps li.ok b{background:var(--ok);border-color:var(--ok);color:#04251a}
+.result{margin-top:14px}
+.result h2{color:var(--ink);font-size:1rem;margin-bottom:4px}
+.result .msg{color:var(--muted);font-size:.86rem;margin-bottom:12px}
+.dest{padding:12px 14px;border-radius:14px;background:rgba(0,0,0,.32);border:1px solid var(--line);
+  font-size:.85rem;overflow-wrap:anywhere;word-break:break-all;margin-bottom:12px;color:#d7def0}
+.actions{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.btn{height:48px;display:flex;align-items:center;justify-content:center;border-radius:14px;cursor:pointer;color:var(--ink);
+  font:inherit;font-weight:600;font-size:.92rem;text-decoration:none;border:1px solid var(--line);background:rgba(255,255,255,.08)}
+.btn.main{background:rgba(110,168,255,.22);border-color:rgba(130,180,255,.6)}
+.btn:active{transform:scale(.97)}
+[hidden]{display:none!important}
+.note{margin:16px 8px 0;text-align:center;font-size:.76rem;color:#667089}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfe0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+    </div>
+    <div><h1>Bypass Tool</h1><p>Tra cứu tuyến liên kết đã cấu hình</p></div>
+  </header>
+
+  <div class="panel">
+    <section class="sec">
+      <h2>Nền tảng</h2>
+      <div class="platforms" id="platforms"></div>
+    </section>
+
+    <section class="sec">
+      <h2>Liên kết</h2>
+      <div class="field" id="field">
+        <input id="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Dán liên kết vào đây" aria-describedby="hint">
+        <button class="clear" id="clear" type="button" aria-label="Xóa nội dung">✕</button>
+      </div>
+      <p class="hint" id="hint" role="alert"></p>
+      <button class="go" id="go" type="button">VƯỢT LINK ↗</button>
+    </section>
+
+    <section class="sec" aria-live="polite">
+      <div class="row"><span class="status" id="status" data-s="idle">Chưa bắt đầu</span><span class="pct" id="pct">0%</span></div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><i id="fill"></i></div>
+      <ol class="steps" id="steps">
+        <li><b>1</b>Kiểm tra liên kết</li>
+        <li><b>2</b>Tra cứu tuyến</li>
+        <li><b>3</b>Hiển thị kết quả</li>
+      </ol>
+    </section>
+  </div>
+
+  <div class="panel result" id="result" hidden>
+    <h2 id="r-title"></h2>
+    <p class="msg" id="r-msg"></p>
+    <div class="dest" id="r-dest" hidden></div>
+    <div class="actions" id="r-actions" hidden>
+      <a class="btn main" id="r-open" target="_blank" rel="noopener noreferrer">Mở liên kết</a>
+      <button class="btn" id="r-copy" type="button">Sao chép</button>
+    </div>
+  </div>
+
+  <p class="note">Bản demo: thanh tiến trình chỉ là hiệu ứng giao diện. Công cụ chỉ tra bảng tuyến có sẵn, không gọi máy chủ hay API.</p>
+</main>
+
+<script>
+"use strict";
+/* Thêm tuyến mới bằng cách thêm một dòng vào ROUTES. */
+const ROUTES = [
+  { input: "https://link4m.org/go/9Rdjtt", output: "https://fnote.net/notes/F1Hb2v" },
+  { input: "https://layma.net/dj28g1j", output: "https://www.mediafire.com/file/djid28jr8fln/MapAOVchapto1.2m_1.1.4.apk/file" }
+];
+const PLATFORMS = ["Link4m","Layma","Gtraffic","Traffic4k","Site2s","Bbmkt","TrafficHub","TrafficViet","Phiên chờ số"];
+const $ = id => document.getElementById(id);
+const els = { url:$("url"), field:$("field"), hint:$("hint"), go:$("go"), status:$("status"), pct:$("pct"), bar:$("bar"), fill:$("fill"),
+  steps:[...document.querySelectorAll("#steps li")], result:$("result"), title:$("r-title"), msg:$("r-msg"),
+  dest:$("r-dest"), actions:$("r-actions"), open:$("r-open"), copy:$("r-copy") };
+let running = false, currentDest = "";
+
+const platBox = $("platforms");
+PLATFORMS.forEach(name => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = name; b.setAttribute("aria-pressed","false");
+  b.addEventListener("click", () => platBox.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b))));
+  platBox.appendChild(b);
+});
+
+function parseUrl(raw){
+  try{ const u = new URL(raw.trim()); return (/^https?:$/.test(u.protocol) && u.hostname.includes(".")) ? u : null; }
+  catch(e){ return null; }
+}
+const keyOf = u => u.hostname.toLowerCase().replace(/^www\./,"") + u.pathname.toLowerCase().replace(/\/+$/,"");
+const TABLE = ROUTES.map(r => ({ key: keyOf(new URL(r.input)), output: r.output }));
+
+const setStatus = (t,s) => { els.status.textContent = t; els.status.dataset.s = s; };
+function setProgress(p){ const v = Math.round(p); els.fill.style.width = v+"%"; els.pct.textContent = v+"%"; els.bar.setAttribute("aria-valuenow", v); }
+function setStep(i, done){
+  els.steps.forEach((li, k) => {
+    const ok = k < i || (done && k === i);
+    li.className = ok ? "ok" : k === i ? "on" : "";
+    li.firstChild.textContent = ok ? "✓" : String(k+1);
+  });
+}
+const resetSteps = () => els.steps.forEach((li,k) => { li.className = ""; li.firstChild.textContent = String(k+1); });
+function showHint(t){ els.hint.textContent = t; els.url.classList.toggle("bad", !!t); }
+function showResult(title, msg, dest){
+  els.result.hidden = false; els.title.textContent = title; els.msg.textContent = msg; currentDest = dest || "";
+  els.dest.hidden = els.actions.hidden = !dest;
+  if(dest){ els.dest.textContent = dest; els.open.href = dest; }
+  els.result.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto" : "smooth", block:"nearest"});
+}
+
+els.url.addEventListener("input", () => { els.field.classList.toggle("has-text", els.url.value.length > 0); showHint(""); });
+$("clear").addEventListener("click", () => { els.url.value = ""; els.field.classList.remove("has-text"); showHint(""); els.url.focus(); });
+els.copy.addEventListener("click", async () => {
+  try{ await navigator.clipboard.writeText(currentDest); }
+  catch(e){ const t = document.createElement("textarea"); t.value = currentDest; document.body.appendChild(t); t.select(); try{document.execCommand("copy")}catch(_){} t.remove(); }
+  els.copy.textContent = "Đã chép ✓"; setTimeout(() => els.copy.textContent = "Sao chép", 1800);
+});
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+els.go.addEventListener("click", async () => {
+  if(running) return;
+  els.result.hidden = true; resetSteps(); setProgress(0);
+  const raw = els.url.value.trim();
+  if(!raw){ setStatus("URL không hợp lệ","invalid"); showHint("Hãy dán liên kết cần tra cứu vào ô nhập."); els.url.focus(); return; }
+  const u = parseUrl(raw);
+  if(!u){ setStatus("URL không hợp lệ","invalid"); showHint("Liên kết cần bắt đầu bằng http:// hoặc https:// và có tên miền đúng."); els.url.focus(); return; }
+  showHint("");
+  running = true; els.go.disabled = true; els.go.textContent = "ĐANG XỬ LÝ…";
+  const total = 5000 + Math.random()*3000, t0 = performance.now();
+  setStatus("Đang xử lý","running"); setStep(0);
+  let found;
+  for(;;){
+    const p = Math.min(100, (performance.now()-t0)/total*100);
+    setProgress(p);
+    if(p >= 66) setStep(2); else if(p >= 33){ setStep(1); if(found === undefined) found = TABLE.find(r => r.key === keyOf(u)) || null; }
+    if(p >= 100) break;
+    await sleep(100);
+  }
+  setStep(2, true);
+  if(found){
+    setStatus("Hoàn tất","done");
+    showResult("Đã tìm thấy tuyến","Liên kết khớp với tuyến đã cấu hình sẵn. Đây là kết quả tra cứu, không phải xử lý thực tế trên máy chủ.", found.output);
+  }else{
+    setStatus("Không tìm thấy tuyến","missing");
+    showResult("Không tìm thấy tuyến","Liên kết này chưa được cấu hình. Ô nhập được giữ nguyên để bạn kiểm tra hoặc sửa lại.","");
+  }
+  running = false; els.go.disabled = false; els.go.textContent = "VƯỢT LINK ↗";
+});
+</script>
+</body>
+</html>
